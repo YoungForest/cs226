@@ -1,0 +1,7 @@
+*.xml
+*.class
+*/.vscode
+*/.idea
+week3/collinear
+*.zip
+*.backup
