@@ -3,10 +3,10 @@ import java.util.List;
 import java.util.Iterator;
 
 public class Board {
-    public final int[][] tiles;
+    private final int[][] tiles;
     private final int rows;
     private final int cols;
-    public final int n;
+    private final int n;
     private int hammingCache;
     private int manhattenCache;
     private String stringCache;
@@ -48,11 +48,6 @@ public class Board {
             ans.append('\n');
         }
         stringCache = ans.toString();
-    }
-
-    @Override
-    public int hashCode() {
-        return stringCache.hashCode();
     }
                                            
     // string representation of this board

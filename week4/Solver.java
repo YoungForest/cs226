@@ -13,49 +13,49 @@ import java.util.Collections;
 import java.util.Iterator;
 
 public class Solver {
-    boolean isSolve = false;
-    int distance = 0;
-    static final int INF = 0x3f3f3f3f;
-    List<Board> route;
+    private boolean isSolve = false;
+    private int distance = 0;
+    private static final int INF = 0x3f3f3f3f;
+    private List<Board> route;
 
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
         int step = 0;
-        Map<Board, Integer> fScore = new HashMap<>();
-        Map<Board, Integer> gScore = new HashMap<>();
-        Map<Board, Board> cameFrom = new HashMap<>();
-        Set<Board> seen = new HashSet<>();
+        Map<String, Integer> fScore = new HashMap<>();
+        Map<String, Integer> gScore = new HashMap<>();
+        Map<String, Board> cameFrom = new HashMap<>();
+        Set<String> seen = new HashSet<>();
         MinPQ<Board> pq = new MinPQ<>((a, b) -> {
-            return fScore.get(a) - fScore.get(b);
+            return fScore.get(a.toString()) - fScore.get(b.toString());
         });
-        gScore.put(initial, 0);
-        fScore.put(initial, initial.manhattan());
+        gScore.put(initial.toString(), 0);
+        fScore.put(initial.toString(), initial.manhattan());
         pq.insert(initial);
-        assert(seen.add(initial));
-        cameFrom.put(initial, null);
+        assert(seen.add(initial.toString()));
+        cameFrom.put(initial.toString(), null);
         while(!pq.isEmpty()) {
             Board current = pq.delMin();
             if (current.isGoal()) {
                 isSolve = true;
-                distance = gScore.get(current);
+                distance = gScore.get(current.toString());
                 // construct answer
                 route = new ArrayList<>();
                 while (current != null) {
                     route.add(current);
-                    current = cameFrom.get(current);
+                    current = cameFrom.get(current.toString());
                 }
                 Collections.reverse(route);
                 break;
             }
             for (Board i : current.neighbors()) {
-                int tentative_gScore = gScore.get(current) + 1;
-                if (tentative_gScore < gScore.getOrDefault(i, INF)) {
-                    cameFrom.put(i, current);
-                    gScore.put(i, tentative_gScore);
-                    fScore.put(i, tentative_gScore + i.manhattan());
-                    if (!seen.contains(i)) {
+                int tentative_gScore = gScore.get(current.toString()) + 1;
+                if (tentative_gScore < gScore.getOrDefault(i.toString(), INF)) {
+                    cameFrom.put(i.toString(), current);
+                    gScore.put(i.toString(), tentative_gScore);
+                    fScore.put(i.toString(), tentative_gScore + i.manhattan());
+                    if (!seen.contains(i.toString())) {
                         pq.insert(i);
-                        assert(seen.add(i));
+                        assert(seen.add(i.toString()));
                     }
                 }
             }
