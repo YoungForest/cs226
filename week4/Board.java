@@ -7,6 +7,9 @@ public class Board {
     private final int rows;
     private final int cols;
     public final int n;
+    private int hammingCache;
+    private int manhattenCache;
+    private String stringCache;
 
     // create a board from an n-by-n array of tiles,
     // where tiles[row][col] = tile at (row, col)
@@ -23,10 +26,17 @@ public class Board {
                 this.tiles[i][j] = tiles[i][j];
             }
         }
-    }
-                                           
-    // string representation of this board
-    public String toString() {
+        hammingCache = 0;
+        manhattenCache = 0;
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j < n; ++j) {
+                if (tiles[i][j] == 0) continue;
+                if (tiles[i][j] != i * n + j + 1) ++hammingCache;
+                int targetI = (tiles[i][j] - 1) / n;
+                int targetJ = (tiles[i][j] - 1) % n;
+                manhattenCache += Math.abs(targetI - i) + Math.abs(targetJ - j);
+            }
+        }
         StringBuilder ans = new StringBuilder();
         ans.append(n);
         ans.append('\n');
@@ -37,7 +47,17 @@ public class Board {
             }
             ans.append('\n');
         }
-        return ans.toString();
+        stringCache = ans.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return stringCache.hashCode();
+    }
+                                           
+    // string representation of this board
+    public String toString() {
+       return stringCache;
     }
 
     // board dimension n
@@ -47,28 +67,12 @@ public class Board {
 
     // number of tiles out of place
     public int hamming() {
-        int ans = 0;
-        for (int i = 0; i < n; ++i) {
-            for (int j = 0; j < n; ++j) {
-                if (tiles[i][j] == 0) continue;
-                if (tiles[i][j] != i * n + j + 1) ++ans;
-            }
-        }
-        return ans;
+        return hammingCache;
     }
 
     // sum of Manhattan distances between tiles and goal
     public int manhattan() {
-        int ans = 0;
-        for (int i = 0; i < n; ++i) {
-            for (int j = 0; j < n; ++j) {
-                if (tiles[i][j] == 0) continue;
-                int targetI = (tiles[i][j] - 1) / n;
-                int targetJ = (tiles[i][j] - 1) % n;
-                ans += Math.abs(targetI - i) + Math.abs(targetJ - j);
-            }
-        }
-        return ans;
+        return manhattenCache;
     }
 
     // is this board the goal board?
@@ -78,14 +82,7 @@ public class Board {
 
     // does this board equal y?
     public boolean equals(Object y) {
-        Board yy = (Board) y;
-        if (n != yy.n) return false;
-        for (int i = 0; i < n; ++i) {
-            for (int j = 0; j < n; ++j) {
-                if (tiles[i][j] != yy.tiles[i][j]) return false;
-            }
-        }
-        return true;
+        return stringCache.equals(y.toString());
     }
 
     // all neighboring boards
@@ -160,9 +157,9 @@ public class Board {
     // unit testing (not graded)
     public static void main(String[] args) {
         int [][] tiles = {
-            {8, 1, 3},
-            {4, 0, 2},
-            {7, 6, 5}
+            {1, 2, 3},
+            {4, 6, 5},
+            {7, 8, 0}
         };
         Board b = new Board(tiles);
         System.out.println(b);
@@ -171,6 +168,7 @@ public class Board {
         System.out.println("Manhattan: ");
         System.out.println(b.manhattan());
         System.out.println(b.twin());
+        System.out.println(b.equals(b));
         for (Board i : b.neighbors()) {
             System.out.println(i);
         }
