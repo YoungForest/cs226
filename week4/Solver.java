@@ -4,10 +4,6 @@ import edu.princeton.cs.algs4.MaxPQ;
 import edu.princeton.cs.algs4.StdOut;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Map;
 import java.util.List;
 import java.util.Collections;
 import java.util.Iterator;
@@ -18,46 +14,64 @@ public class Solver {
     private static final int INF = 0x3f3f3f3f;
     private List<Board> route;
 
+    private class Node implements Comparable<Node> {
+        int fScore;
+        int gScore;
+        Node comeFrom;
+        Board data;
+
+        public Node(Node source, Board b) {
+            if (source == null)
+                gScore = 0;
+            else
+                gScore = source.gScore + 1;
+            fScore = gScore + b.manhattan();
+            comeFrom = source;
+            data = b;
+        }
+
+        @Override
+        public int compareTo(Node that) {
+            return this.fScore - that.fScore;
+        }
+    }
+
+    Node searchBoard(MinPQ<Node> pq) {
+        Node current = pq.delMin();
+        if (current.data.isGoal()) {
+            return current;
+        }
+        for (Board i : current.data.neighbors()) {
+            if (current.comeFrom == null || !i.equals(current.comeFrom.data)) {
+                pq.insert(new Node(current, i));
+            }
+        }
+        return null;
+    }
+
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
         int step = 0;
-        Map<String, Integer> fScore = new HashMap<>();
-        Map<String, Integer> gScore = new HashMap<>();
-        Map<String, Board> cameFrom = new HashMap<>();
-        Set<String> seen = new HashSet<>();
-        MinPQ<Board> pq = new MinPQ<>((a, b) -> {
-            return fScore.get(a.toString()) - fScore.get(b.toString());
-        });
-        gScore.put(initial.toString(), 0);
-        fScore.put(initial.toString(), initial.manhattan());
-        pq.insert(initial);
-        assert(seen.add(initial.toString()));
-        cameFrom.put(initial.toString(), null);
-        while(!pq.isEmpty()) {
-            Board current = pq.delMin();
-            if (current.isGoal()) {
+        MinPQ<Node> pq = new MinPQ<>();
+        MinPQ<Node> twinPq = new MinPQ<>();
+        pq.insert(new Node(null, initial));
+        twinPq.insert(new Node(null, initial.twin()));
+        while (!pq.isEmpty() && !twinPq.isEmpty()) {
+            Node current = searchBoard(pq);
+            if (current != null) {
                 isSolve = true;
-                distance = gScore.get(current.toString());
+                distance = current.gScore;
                 // construct answer
                 route = new ArrayList<>();
                 while (current != null) {
-                    route.add(current);
-                    current = cameFrom.get(current.toString());
+                    route.add(current.data);
+                    current = current.comeFrom;
                 }
                 Collections.reverse(route);
                 break;
             }
-            for (Board i : current.neighbors()) {
-                int tentative_gScore = gScore.get(current.toString()) + 1;
-                if (tentative_gScore < gScore.getOrDefault(i.toString(), INF)) {
-                    cameFrom.put(i.toString(), current);
-                    gScore.put(i.toString(), tentative_gScore);
-                    fScore.put(i.toString(), tentative_gScore + i.manhattan());
-                    if (!seen.contains(i.toString())) {
-                        pq.insert(i);
-                        assert(seen.add(i.toString()));
-                    }
-                }
+            if (searchBoard(twinPq) != null) {
+                break;
             }
         }
     }
@@ -74,16 +88,10 @@ public class Solver {
 
     // sequence of boards in a shortest solution
     public Iterable<Board> solution() {
-        return new Iterable<Board>() { 
-            @Override
-            public Iterator<Board> iterator() 
-            { 
-                return route.iterator();
-            } 
-        }; 
+        return route;
     }
 
-    // test client (see below) 
+    // test client (see below)
     public static void main(String[] args) {
         In in = new In(args[0]);
         int n = in.readInt();
